@@ -18,4 +18,25 @@ func main() {
 
 	fmt.Println("O comando escolhido foi: ", reader)
 
+	//if reader == 1 {
+	//	fmt.Println("Monitorando....")
+	//} else if reader == 2 {
+	//		fmt.Println("Exibindo Logs....")
+	//} else if reader == 0 {
+	//		fmt.Println("Saindo do Programa")
+	//} else {
+	//		fmt.Println("Não reconheço este comando")
+	//	}
+
+	switch reader {
+	case 1:
+		fmt.Println("Monitorando....")
+	case 2:
+		fmt.Println("Exibindo Logs....")
+	case 0:
+		fmt.Println("Saindo do Programa")
+	default:
+		fmt.Println("Não reconheço este comando")
+	}
+
 }
