@@ -1,37 +1,30 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
+	"time"
 )
 
+const qtdMonitoramento = 5
+const delay = 5
+
 func main() {
-
+	// o for sem parâmetro é para loops infinitos
 	for {
-
 		exibeMenu()
-		//first method
-		//var reader int
-		//fmt.Scanf("%d", &reader)
-
-		//second method to get
-
-		//if reader == 1 {
-		//	fmt.Println("Monitorando....")
-		//} else if reader == 2 {
-		//		fmt.Println("Exibindo Logs....")
-		//} else if reader == 0 {
-		//		fmt.Println("Saindo do Programa")
-		//} else {
-		//		fmt.Println("Não reconheço este comando")
-		//	}
 		reader := leComando()
 		switch reader {
 		case 1:
 			IniciarMonitoramento()
 		case 2:
 			fmt.Println("Exibindo Logs....")
+			imprimeLog()
 		case 0:
 			fmt.Println("Saindo do Programa")
 			saiPrograma()
@@ -63,13 +56,69 @@ func saiPrograma() {
 
 func IniciarMonitoramento() {
 	fmt.Println("Monitorando....")
-	site := "https://www.alura.com.br/"
-	response, _ := http.Get(site)
+
+	sites := leSitesDoArquivo()
+
+	for i := 0; i < qtdMonitoramento; i++ {
+		for i, site := range sites {
+			fmt.Println("Testando site: ", i, "site: ", site)
+			testaSite(site)
+
+		}
+		time.Sleep(delay * time.Second)
+	}
+
+}
+
+func testaSite(site string) {
+	//o underline é para ignorar a referente variável em uma função com múltiplos retornos
+	//response, _ := http.Get(site)
 	//fmt.Print(response)
 
+	response, _ := http.Get(site)
+
 	if response.StatusCode == 200 {
-		fmt.Print("Site: ", site, "Carregado com sucesso \n")
+		fmt.Println("Site: ", site, " Carregado com sucesso \n")
+		registraLog(site, true)
+		//fmt.Println(response)
 	} else {
-		fmt.Print("Site: ", site, "Está com problemas \n")
+		fmt.Println("Site: ", site, "Está com problemas \n")
+		registraLog(site, false)
 	}
+
+}
+
+func leSitesDoArquivo() []string {
+
+	var sites []string
+	arquivo, _ := os.Open("sites.txt")
+	//arquivo, _ := os.ReadFile("sites.txt")
+	//fmt.Println(arquivo)
+	leitor := bufio.NewReader(arquivo)
+	for {
+		linha, err := leitor.ReadString('\n')
+		linhaSemEspaco := strings.TrimSpace(linha)
+		sites = append(sites, linhaSemEspaco)
+
+		if err == io.EOF {
+			break
+		}
+	}
+
+	arquivo.Close()
+	return sites
+}
+
+func registraLog(site string, status bool) {
+
+	arquivo, _ := os.OpenFile("log.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+
+	arquivo.WriteString(time.Now().Format("02/01/2006 15:04:05 - ") + site + "- online: " + strconv.FormatBool(status) + "\n")
+
+	arquivo.Close()
+}
+
+func imprimeLog() {
+	arquivo, _ := os.ReadFile("log.txt")
+	fmt.Println(string(arquivo))
 }
